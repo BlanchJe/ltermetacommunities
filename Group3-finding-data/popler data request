@@ -1,0 +1,26 @@
+setwd("")
+
+devtools::install_github("AldoCompagnoni/popler",ref="workingGroupNCEAS", force=TRUE)
+
+library(popler)
+
+study_list2<-as.data.frame(browse_popler(group_factors = c("study","metarecordid","study_site","studytype","community","metalink"), trim=FALSE,
+                                         criteria = community == "yes" & duration_years >= 5 & studytype == "obs" & data_type != "individual"))
+
+study_list2=subset(study_list2,!is.na(metarecordid))
+attach(study_list2)
+
+a<-study_list2 %>% group_by(metarecordid) %>% summarise(space_rep=length(study_site))
+
+study_list3=as.data.frame(subset(a,a$space_rep > 5))
+b<- distinct(select(study_list2,metarecordid,study,metalink))
+
+for(i in 1:nrow(study_list3)) 
+  { 
+  write.csv(tunnel_query_(paste0("metarecordid == ", study_list3$metarecordid[i])),
+            file= paste0(study_list3$metarecordid[i],".csv"), row.names = FALSE)
+}
+write.csv(b,"master_names_list.csv",row.names=FALSE)
+detach(study_list2)
+
+
